@@ -7,7 +7,7 @@ class RockClassifier {
   /// Load mô hình từ assets
   Future<void> loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('assets/model/test.tflite');
+      _interpreter = await Interpreter.fromAsset('assets/model/test2.tflite');
       print("✅ Model loaded");
     } catch (e) {
       print("❌ Failed to load model: $e");
@@ -34,7 +34,7 @@ class RockClassifier {
                 })));
 
     // Tạo mảng output
-    var output = List.filled(1 * 7, 0.0).reshape([1, 7]);
+    var output = List.filled(1 * 6, 0.0).reshape([1, 6]);
 
     // Chạy mô hình
     _interpreter.run(input, output);

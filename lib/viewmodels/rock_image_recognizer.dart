@@ -44,7 +44,7 @@ class RockImageRecognizer {
       'M3lz86JyDr6fDW9ZND44'
     ];
 
-    if (confidence < 0.60 || predictedIndex >= rockIds.length) {
+    if (confidence < 0.70 || predictedIndex >= rockIds.length) {
       showRockAlertDialog(
         context,
         'Không nhận diện được',

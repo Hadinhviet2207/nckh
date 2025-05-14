@@ -230,9 +230,10 @@ class _BottomNavBarState extends State<BottomNavBar> {
           const SizedBox(width: 16),
           GestureDetector(
             onTap: () {
-              setState(() {
-                isFavorite = !isFavorite;
-              });
+              showComingSoonDialog(context);
+              // setState(() {
+              //   isFavorite = !isFavorite;
+              // });
             },
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 300),
