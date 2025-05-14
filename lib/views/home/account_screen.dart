@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nckh/services/RockImageDialog.dart';
 import 'package:nckh/services/upload_service.dart';
 
 import 'package:nckh/services/user_service.dart';
@@ -148,7 +149,7 @@ class _AccountScreenState extends State<AccountScreen> {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () {
-                // TODO: Xử lý xóa tài khoản
+                showComingSoonDialog(context);
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red,

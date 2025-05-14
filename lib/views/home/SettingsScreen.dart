@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nckh/services/RockImageDialog.dart';
 import 'package:nckh/services/local_auth_service.dart';
 import 'package:nckh/views/home/account_screen.dart';
 import 'package:nckh/views/intro/intro_home_screen.dart';
@@ -93,12 +94,11 @@ class SettingsScreen extends StatelessWidget {
 
               // Các nút còn lại
               SettingsButton(
-                icon: Icons.dark_mode,
-                title: 'Chế độ sáng / tối',
-                onTap: () {
-                  // TODO: Toggle theme
-                },
-              ),
+                  icon: Icons.dark_mode,
+                  title: 'Chế độ sáng / tối',
+                  onTap: () {
+                    showComingSoonDialog(context);
+                  }),
 
               const SizedBox(height: 16),
               const Text(
@@ -111,47 +111,41 @@ class SettingsScreen extends StatelessWidget {
               const SizedBox(height: 8),
 
               SettingsButton(
-                icon: Icons.book,
-                title: 'Chính sách bảo mật',
-                onTap: () {
-                  // TODO
-                },
-              ),
+                  icon: Icons.book,
+                  title: 'Chính sách bảo mật',
+                  onTap: () {
+                    showComingSoonDialog(context);
+                  }),
               SettingsButton(
-                icon: Icons.view_in_ar,
-                title: 'Điều khoản sử dụng',
-                onTap: () {
-                  // TODO
-                },
-              ),
+                  icon: Icons.view_in_ar,
+                  title: 'Điều khoản sử dụng',
+                  onTap: () {
+                    showComingSoonDialog(context);
+                  }),
               SettingsButton(
-                icon: Icons.share,
-                title: 'Chia sẻ',
-                onTap: () {
-                  // TODO
-                },
-              ),
+                  icon: Icons.share,
+                  title: 'Chia sẻ',
+                  onTap: () {
+                    showComingSoonDialog(context);
+                  }),
               SettingsButton(
-                icon: Icons.favorite,
-                title: 'Ủng hộ',
-                onTap: () {
-                  // TODO
-                },
-              ),
+                  icon: Icons.favorite,
+                  title: 'Ủng hộ',
+                  onTap: () {
+                    showComingSoonDialog(context);
+                  }),
               SettingsButton(
-                icon: Icons.contact_support,
-                title: 'Liên hệ',
-                onTap: () {
-                  // TODO
-                },
-              ),
+                  icon: Icons.contact_support,
+                  title: 'Liên hệ',
+                  onTap: () {
+                    showComingSoonDialog(context);
+                  }),
               SettingsButton(
-                icon: Icons.language,
-                title: 'Thay đổi ngôn ngữ',
-                onTap: () {
-                  // TODO
-                },
-              ),
+                  icon: Icons.language,
+                  title: 'Thay đổi ngôn ngữ',
+                  onTap: () {
+                    showComingSoonDialog(context);
+                  }),
 
               const SizedBox(height: 24),
               const Text(

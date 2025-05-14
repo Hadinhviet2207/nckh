@@ -61,3 +61,68 @@ class RockImageDialog extends StatelessWidget {
     );
   }
 }
+
+void showComingSoonDialog(BuildContext context) {
+  showDialog(
+    context: context,
+    barrierDismissible: true, // Bấm ra ngoài để đóng
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        backgroundColor: Colors.white,
+        elevation: 10,
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.construction, size: 60, color: Colors.orange),
+              const SizedBox(height: 20),
+              const Text(
+                "Chức năng đang phát triển",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "Bạn vui lòng quay lại sau nhé!",
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.black54,
+                ),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  child: const Text(
+                    "Đã hiểu",
+                    style: TextStyle(fontSize: 16),
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}

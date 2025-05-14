@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:nckh/services/RockImageDialog.dart';
 import 'package:nckh/services/user_service.dart';
 import 'package:nckh/viewmodels/rock_image_recognizer.dart';
 import 'package:nckh/views/home/SearchScreen.dart';
@@ -180,8 +181,24 @@ class SearchBar extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(
-                        builder: (context) => const SettingsScreen(),
+                      PageRouteBuilder(
+                        pageBuilder: (context, animation, secondaryAnimation) =>
+                            const SettingsScreen(),
+                        transitionsBuilder:
+                            (context, animation, secondaryAnimation, child) {
+                          const begin = Offset(1.0, 0.0); // Bắt đầu từ trái
+                          const end = Offset.zero; // Kết thúc ở giữa màn hình
+                          const curve = Curves.easeInOut;
+
+                          final tween = Tween(begin: begin, end: end)
+                              .chain(CurveTween(curve: curve));
+                          final offsetAnimation = animation.drive(tween);
+
+                          return SlideTransition(
+                            position: offsetAnimation,
+                            child: child,
+                          );
+                        },
                       ),
                     );
                   },
@@ -214,7 +231,6 @@ class SearchBar extends StatelessWidget {
   }
 }
 
-// Thanh điều hướng dưới
 class BottomNavBar extends StatefulWidget {
   @override
   _BottomNavBarState createState() => _BottomNavBarState();
@@ -223,34 +239,52 @@ class BottomNavBar extends StatefulWidget {
 class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
 
+  void _onItemTapped(int index) {
+    setState(() => _selectedIndex = index);
+
+    if (index == 0) {
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => HomeScreen(),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(
+              opacity: animation,
+              child: child,
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      );
+    } else if (index == 2) {
+      showComingSoonDialog(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Stack(
       alignment: Alignment.bottomCenter,
       children: [
         Container(
-          padding: EdgeInsets.only(top: 7, bottom: 5),
-          decoration: BoxDecoration(
+          padding: const EdgeInsets.only(top: 7, bottom: 5),
+          decoration: const BoxDecoration(
             color: Color(0xFF222222),
           ),
           child: BottomNavigationBar(
             backgroundColor: Colors.transparent,
             elevation: 0,
             currentIndex: _selectedIndex,
-            onTap: (index) {
-              if (index != 1) {
-                setState(() => _selectedIndex = index);
-              }
-            },
-            selectedItemColor: Color(0xFFE5C47E),
+            onTap: _onItemTapped, // 🔥 Dùng đúng hàm gọi
+            selectedItemColor: const Color(0xFFE5C47E),
             unselectedItemColor: Colors.white,
             selectedFontSize: 16,
             unselectedFontSize: 15,
             showSelectedLabels: true,
             showUnselectedLabels: true,
-            items: [
+            items: const [
               BottomNavigationBarItem(
-                icon: Icon(Icons.home, size: 24),
+                icon: Icon(Icons.apps, size: 24),
                 label: "Trang chủ",
               ),
               BottomNavigationBarItem(
@@ -258,21 +292,23 @@ class _BottomNavBarState extends State<BottomNavBar> {
                 label: "",
               ),
               BottomNavigationBarItem(
-                icon: Icon(Icons.person, size: 24),
-                label: "Người dùng",
+                icon: Icon(Icons.collections_bookmark, size: 24),
+                label: "Bộ sưu tập",
               ),
             ],
           ),
         ),
+
+        // Nút giữa nổi tròn
         Positioned(
           bottom: 25,
           child: Container(
             width: 62,
             height: 62,
             decoration: BoxDecoration(
-              color: Color(0xFF8C89F8),
+              color: const Color(0xFF8C89F8),
               shape: BoxShape.circle,
-              boxShadow: [
+              boxShadow: const [
                 BoxShadow(
                   color: Colors.black26,
                   blurRadius: 8,

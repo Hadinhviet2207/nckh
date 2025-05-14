@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/views/home/collection_detail_screen.dart';
+import 'package:nckh/services/RockImageDialog.dart';
 import 'package:nckh/widgets/Result/Description_result_widget.dart';
 import 'package:nckh/widgets/Result/basic_characteristics_result.dart';
 import 'package:nckh/widgets/Result/stone_info_result_widget.dart';
@@ -264,6 +264,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
               //     builder: (context) => const CollectionDetailScreen(),
               //   ),
               // );
+              showComingSoonDialog(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFFE6792B),
