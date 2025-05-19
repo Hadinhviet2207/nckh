@@ -6,7 +6,7 @@ import 'package:nckh/widgets/stone/FrequentlyAskedQuestions.dart';
 import 'package:nckh/widgets/stone/OtherInformationWidget.dart';
 import 'package:nckh/widgets/stone/StructureAndComposition.dart';
 import 'package:nckh/widgets/stone/basic_characteristics.dart';
-import 'package:nckh/views/home/collection_detail_screen.dart';
+import 'package:nckh/views/home/add_colection.dart';
 import 'package:nckh/widgets/stone/stone_info_widget.dart';
 
 class StoneDetailScreen extends StatefulWidget {

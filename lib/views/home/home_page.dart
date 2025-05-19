@@ -4,6 +4,7 @@ import 'package:nckh/services/user_service.dart';
 import 'package:nckh/viewmodels/rock_image_recognizer.dart';
 import 'package:nckh/views/home/SearchScreen.dart';
 import 'package:nckh/views/home/SettingsScreen.dart';
+import 'package:nckh/views/home/colection_detail.dart';
 import 'package:nckh/widgets/homepage/article_section.dart';
 import 'package:nckh/widgets/homepage/hero_section.dart';
 import 'package:nckh/widgets/homepage/popular_rocks_section.dart';
@@ -240,6 +241,9 @@ class _BottomNavBarState extends State<BottomNavBar> {
   int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
+    // Không setState nếu là nút giữa
+    if (index == 1) return;
+
     setState(() => _selectedIndex = index);
 
     if (index == 0) {
@@ -248,16 +252,24 @@ class _BottomNavBarState extends State<BottomNavBar> {
         PageRouteBuilder(
           pageBuilder: (_, __, ___) => HomeScreen(),
           transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
+            return FadeTransition(opacity: animation, child: child);
           },
           transitionDuration: const Duration(milliseconds: 300),
         ),
       );
     } else if (index == 2) {
-      showComingSoonDialog(context);
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (_, __, ___) => const Scaffold(
+            body: SafeArea(child: CollectionScreen()),
+          ),
+          transitionsBuilder: (_, animation, __, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 300),
+        ),
+      );
     }
   }
 
@@ -275,7 +287,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
             backgroundColor: Colors.transparent,
             elevation: 0,
             currentIndex: _selectedIndex,
-            onTap: _onItemTapped, // 🔥 Dùng đúng hàm gọi
+            onTap: _onItemTapped,
             selectedItemColor: const Color(0xFFE5C47E),
             unselectedItemColor: Colors.white,
             selectedFontSize: 16,
@@ -288,7 +300,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
                 label: "Trang chủ",
               ),
               BottomNavigationBarItem(
-                icon: SizedBox.shrink(),
+                icon: SizedBox.shrink(), // Nút giữa rỗng
                 label: "",
               ),
               BottomNavigationBarItem(
@@ -299,7 +311,7 @@ class _BottomNavBarState extends State<BottomNavBar> {
           ),
         ),
 
-        // Nút giữa nổi tròn
+        // Nút giữa nổi
         Positioned(
           bottom: 25,
           child: Container(

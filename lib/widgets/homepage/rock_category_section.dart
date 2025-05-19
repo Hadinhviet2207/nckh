@@ -26,7 +26,7 @@ class _RockCategorySectionState extends State<RockCategorySection> {
 
     final rocks = snapshot.docs.map((doc) {
       final data = doc.data();
-      data['id'] = doc.id; // Đảm bảo có `id`
+      data['id'] = doc.id;
       return RockModel.fromJson(data);
     }).toList();
 
