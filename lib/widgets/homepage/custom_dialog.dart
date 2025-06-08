@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:stonelens/ScannerScreen.dart';
 
 void showRockAlertDialog(BuildContext context, String title, String message) {
   showGeneralDialog(
     context: context,
-    barrierDismissible: false,
+    barrierDismissible: true, // Cho phép đóng khi nhấn ngoài
     barrierLabel: "Dialog",
     transitionDuration: const Duration(milliseconds: 300),
     pageBuilder: (context, _, __) {
@@ -53,66 +54,87 @@ class _RockDialogContent extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      child: Stack(
         children: [
-          // Icon đá
-          Container(
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Color(0xFF7C9473), Color(0xFF546E7A)],
+          // Nút đóng (dấu X)
+          Positioned(
+            right: 0,
+            top: 0,
+            child: IconButton(
+              icon: const Icon(Icons.close, color: Colors.white, size: 28),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Icon đá
+              Container(
+                decoration: const BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    colors: [Color(0xFF7C9473), Color(0xFF546E7A)],
+                  ),
+                ),
+                padding: const EdgeInsets.all(18),
+                child: const Icon(
+                  Icons.landscape_rounded,
+                  size: 50,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            padding: const EdgeInsets.all(18),
-            child: const Icon(
-              Icons.landscape_rounded,
-              size: 50,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-          // Tiêu đề
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 22,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 12),
-
-          // Nội dung
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[300],
-              height: 1.5,
-            ),
-          ),
-          const SizedBox(height: 26),
-
-          // Nút
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFF7C873),
-              foregroundColor: Colors.black87,
-              padding: const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
+              // Tiêu đề
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
               ),
-              elevation: 6,
-            ),
-            child: const Text(
-              "Thử lại",
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+              const SizedBox(height: 12),
+
+              // Nội dung
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: Colors.grey[300],
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 26),
+
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop(); // Đóng dialog
+                  Navigator.of(context).pushReplacement(
+                    // Thay vì push, dùng pushReplacement
+                    MaterialPageRoute(
+                      builder: (context) => const ScannerScreen(),
+                    ),
+                  );
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFF7C873),
+                  foregroundColor: Colors.black87,
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 36, vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 6,
+                ),
+                child: const Text(
+                  "Thử lại",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
           ),
         ],
       ),

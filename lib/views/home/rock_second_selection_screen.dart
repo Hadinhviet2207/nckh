@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:nckh/views/home/rock_comparison_result_screen.dart';
+import 'package:stonelens/views/home/rock_comparison_result_screen.dart';
 
 class RockSecondSelectionScreen extends StatefulWidget {
   final Map<String, dynamic> firstStone;

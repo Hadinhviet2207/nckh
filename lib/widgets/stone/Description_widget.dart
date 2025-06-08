@@ -1,63 +1,83 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:nckh/models/rock_model.dart'; // Import RockModel
+import 'package:stonelens/models/rock_model.dart';
 
 class Description extends StatelessWidget {
-  final RockModel rock; // Thêm tham số rock để sử dụng dữ liệu từ RockModel
+  final RockModel? rock;
+  final String? stoneData;
+  final bool fromAI;
 
-  Description({
-    required this.rock,
-  });
+  const Description({
+    Key? key,
+    this.rock,
+    this.stoneData,
+    required this.fromAI,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    // Parse JSON nếu đến từ AI
+    Map<String, dynamic> data = {};
+    if (fromAI && stoneData != null) {
+      try {
+        data = jsonDecode(stoneData!);
+      } catch (e) {
+        debugPrint('Lỗi giải mã JSON mô tả: $e');
+      }
+    }
+
+    // Lấy mô tả từ nguồn phù hợp
+    final String moTa = fromAI
+        ? (data['mieuTa'] ?? 'Không có mô tả.')
+        : (rock?.mieuTa ?? 'Không có mô tả.');
+
     return Padding(
-      padding: EdgeInsets.all(16), // Padding ngoài cùng cho container
+      padding: const EdgeInsets.all(16),
       child: Container(
-        padding: EdgeInsets.all(16), // Padding bên trong container
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white, // Màu nền của container
-          borderRadius:
-              BorderRadius.circular(14), // Bo tròn các góc của container
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Tạo bóng mờ cho container
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 8,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tiêu đề mô tả
+            // Tiêu đề
             Row(
               children: [
                 Image.asset(
-                  'assets/icon_des1.png', // Đường dẫn tới file ảnh icon của bạn
+                  'assets/icon_des1.png',
                   width: 30,
                   height: 30,
                 ),
-                SizedBox(width: 8),
-                Text(
-                  'Mô tả', // Tiêu đề phần mô tả
+                const SizedBox(width: 12),
+                const Text(
+                  'Mô tả',
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF303A53), // Màu tiêu đề
+                    color: Color(0xFF303A53),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 12), // Khoảng cách giữa tiêu đề và mô tả
+            const SizedBox(height: 16),
 
             // Nội dung mô tả
             Text(
-              rock.mieuTa, // Mô tả từ đối tượng rock
+              moTa,
               textAlign: TextAlign.justify,
               style: TextStyle(
-                fontSize: 18,
-                color: Colors.black.withOpacity(0.7),
-                height: 1.5,
+                fontSize: 16,
+                color: Colors.black.withOpacity(0.75),
+                height: 1.6,
               ),
             ),
           ],

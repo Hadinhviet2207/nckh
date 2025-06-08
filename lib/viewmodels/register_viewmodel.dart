@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nckh/services/auth_error_handler.dart';
-import 'package:nckh/services/user_service.dart';
-import 'package:nckh/views/auth/login_screen.dart';
+import 'package:stonelens/services/auth_error_handler.dart';
+import 'package:stonelens/services/user_service.dart';
+import 'package:stonelens/views/auth/login_screen.dart';
 
 class RegisterViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();

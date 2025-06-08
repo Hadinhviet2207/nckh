@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/services/RockImageDialog.dart';
-import 'package:nckh/services/local_auth_service.dart';
-import 'package:nckh/views/home/account_screen.dart';
-import 'package:nckh/views/intro/intro_home_screen.dart';
-import 'package:nckh/widgets/Result/RockImageDialog_result.dart';
+import 'package:stonelens/services/RockImageDialog.dart';
+import 'package:stonelens/services/local_auth_service.dart';
+import 'package:stonelens/views/home/account_screen.dart';
+import 'package:stonelens/views/home/app_introduction_screen.dart';
+import 'package:stonelens/views/intro/intro_home_screen.dart';
+import 'package:stonelens/views/home/RockImageDialog_result.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -29,18 +30,13 @@ class SettingsScreen extends StatelessWidget {
                       child: GestureDetector(
                         onTap: () => Navigator.pop(context),
                         child: Container(
-                          width: 80,
-                          height: 40,
+                          margin: const EdgeInsets.only(
+                              right: 20), // Lùi ra từ lề trái
+                          width: 70,
+                          height: 38,
                           decoration: BoxDecoration(
                             color: const Color(0xFF303A53),
                             borderRadius: BorderRadius.circular(12),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.2),
-                                blurRadius: 6,
-                                offset: const Offset(0, 3),
-                              ),
-                            ],
                           ),
                           child: const Center(
                             child: Icon(
@@ -135,16 +131,21 @@ class SettingsScreen extends StatelessWidget {
                     showComingSoonDialog(context);
                   }),
               SettingsButton(
-                  icon: Icons.contact_support,
-                  title: 'Liên hệ',
-                  onTap: () {
-                    showComingSoonDialog(context);
-                  }),
-              SettingsButton(
                   icon: Icons.language,
                   title: 'Thay đổi ngôn ngữ',
                   onTap: () {
                     showComingSoonDialog(context);
+                  }),
+              SettingsButton(
+                  icon: Icons.contact_support,
+                  title: 'Giới Thiệu',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const AppIntroductionScreen(),
+                      ),
+                    );
                   }),
 
               const SizedBox(height: 24),

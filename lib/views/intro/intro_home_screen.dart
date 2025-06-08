@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/services/local_auth_service.dart';
-import 'package:nckh/views/home/home_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:nckh/views/intro/intro_screen.dart';
-import 'package:nckh/views/auth/login_screen.dart';
+import 'package:stonelens/services/local_auth_service.dart';
+import 'package:stonelens/views/home/bottom_nav_bar.dart';
+import 'package:stonelens/views/intro/intro_screen.dart';
+import 'package:stonelens/views/auth/login_screen.dart';
 
 class Intro_HomeScreen extends StatefulWidget {
   @override
@@ -29,7 +28,7 @@ class _HomeScreenState extends State<Intro_HomeScreen> {
     } else {
       if (isLoggedIn) {
         Future.delayed(Duration(seconds: 3), () {
-          Navigator.of(context).pushReplacement(_createRoute(HomeScreen()));
+          Navigator.of(context).pushReplacement(_createRoute(MainScreen()));
         });
       } else {
         Future.delayed(Duration(seconds: 3), () {

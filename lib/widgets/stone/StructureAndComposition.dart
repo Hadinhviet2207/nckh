@@ -1,12 +1,21 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:nckh/models/rock_model.dart'; // Import RockModel
+import 'package:stonelens/models/rock_model.dart';
 
 class StructureAndComposition extends StatelessWidget {
-  final RockModel rock; // Sử dụng RockModel để lấy dữ liệu đá
+  final RockModel? rock;
+  final String? stoneData; // JSON string nếu fromAI = true
+  final bool fromAI;
 
-  StructureAndComposition({required this.rock});
+  StructureAndComposition({
+    this.rock,
+    this.stoneData,
+    required this.fromAI,
+    Key? key,
+  })  : assert(rock != null || stoneData != null,
+            'Phải truyền ít nhất rock hoặc stoneData'),
+        super(key: key);
 
-  // Hàm xây dựng phần tiêu đề và nội dung
   Widget _buildInfoRow(String title, String description, Color color) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -15,24 +24,21 @@ class StructureAndComposition extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.circle, // Biểu tượng chấm tròn
-                size: 8,
-                color: color, // Màu sắc của chấm tròn
-              ),
-              SizedBox(width: 8), // Khoảng cách giữa icon và tiêu đề
+              Icon(Icons.circle, size: 8, color: color),
+              const SizedBox(width: 8),
               Text(
-                title, // Tiêu đề thông tin
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 20,
-                    color: Colors.orange),
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.orange,
+                ),
               ),
             ],
           ),
           Text(
-            description, // Mô tả thông tin
-            style: TextStyle(fontSize: 18, color: Colors.black87),
+            description.isNotEmpty ? description : '-',
+            style: const TextStyle(fontSize: 18, color: Colors.black87),
           ),
         ],
       ),
@@ -41,50 +47,65 @@ class StructureAndComposition extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    Map<String, dynamic> data = {};
+
+    if (fromAI) {
+      if (stoneData != null) {
+        try {
+          data = json.decode(stoneData!) as Map<String, dynamic>;
+        } catch (e) {
+          // Nếu parse lỗi thì data rỗng
+          data = {};
+        }
+      }
+    } else {
+      data = {
+        'kienTruc': rock?.kienTruc ?? '',
+        'cauTao': rock?.cauTao ?? '',
+      };
+    }
+
     return Padding(
-      padding: EdgeInsets.all(16), // Padding ngoài cùng cho container
+      padding: const EdgeInsets.all(16),
       child: Container(
-        padding: EdgeInsets.all(16), // Padding bên trong container
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white, // Màu nền của container
-          borderRadius:
-              BorderRadius.circular(14), // Bo tròn các góc của container
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Tạo bóng mờ cho container
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 8,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tiêu đề chính "Kết cấu và Cấu tạo"
             Row(
               children: [
-                // Thêm icon tùy chỉnh
                 Image.asset(
-                  'assets/connection.png', // Đường dẫn đến tệp icon của bạn
+                  'assets/connection.png',
                   width: 30,
                   height: 30,
                 ),
-                SizedBox(width: 8), // Khoảng cách giữa icon và tiêu đề
-                Text(
-                  "Kết cấu và Cấu tạo", // Tiêu đề chính
+                const SizedBox(width: 8),
+                const Text(
+                  "Kết cấu và Cấu tạo",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF303A53), // Màu tiêu đề
+                    color: Color(0xFF303A53),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 16), // Khoảng cách giữa tiêu đề và các thông tin
-
-            // Các thông tin về kết cấu và cấu tạo từ RockModel
-            _buildInfoRow('Về Kiến trúc', rock.kienTruc, Colors.orange),
-            _buildInfoRow('Về Cấu tạo', rock.cauTao, Colors.orange),
+            const SizedBox(height: 16),
+            _buildInfoRow('Về Kiến trúc', data['kienTruc']?.toString() ?? '-',
+                Colors.orange),
+            _buildInfoRow(
+                'Về Cấu tạo', data['cauTao']?.toString() ?? '-', Colors.orange),
           ],
         ),
       ),

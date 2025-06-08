@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:nckh/services/favorite_service.dart';
-import 'package:nckh/views/home/StoneDetailScreen.dart';
-import 'package:nckh/models/rock_model.dart'; // Đường dẫn này tùy thuộc vị trí file RockModel
+import 'package:stonelens/services/favorite_service.dart';
+import 'package:stonelens/views/home/StoneDetailScreen.dart';
+import 'package:stonelens/models/rock_model.dart'; // Đường dẫn này tùy thuộc vị trí file RockModel
 
 class RockCategorySection extends StatefulWidget {
   @override

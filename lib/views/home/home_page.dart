@@ -1,25 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/services/RockImageDialog.dart';
-import 'package:nckh/services/user_service.dart';
-import 'package:nckh/viewmodels/rock_image_recognizer.dart';
-import 'package:nckh/views/home/SearchScreen.dart';
-import 'package:nckh/views/home/SettingsScreen.dart';
-import 'package:nckh/views/home/colection_detail.dart';
-import 'package:nckh/widgets/homepage/article_section.dart';
-import 'package:nckh/widgets/homepage/hero_section.dart';
-import 'package:nckh/widgets/homepage/popular_rocks_section.dart';
-import 'package:nckh/widgets/homepage/rock_category_section.dart';
+import 'package:stonelens/services/user_service.dart';
+import 'package:stonelens/views/home/SearchScreen.dart';
+import 'package:stonelens/views/home/SettingsScreen.dart';
+import 'package:stonelens/widgets/homepage/article_section.dart';
+import 'package:stonelens/widgets/homepage/hero_section.dart';
+import 'package:stonelens/widgets/homepage/popular_rocks_section.dart';
+import 'package:stonelens/widgets/homepage/rock_category_section.dart';
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({Key? key}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
         elevation: 0,
-        toolbarHeight: 8,
+        toolbarHeight: 0,
       ),
       body: ScrollConfiguration(
         behavior: NoGlowScrollBehavior(),
@@ -38,7 +36,6 @@ class HomeScreen extends StatelessWidget {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavBar(),
     );
   }
 }
@@ -228,121 +225,6 @@ class SearchBar extends StatelessWidget {
           const SizedBox(width: 4),
         ],
       ),
-    );
-  }
-}
-
-class BottomNavBar extends StatefulWidget {
-  @override
-  _BottomNavBarState createState() => _BottomNavBarState();
-}
-
-class _BottomNavBarState extends State<BottomNavBar> {
-  int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    // Không setState nếu là nút giữa
-    if (index == 1) return;
-
-    setState(() => _selectedIndex = index);
-
-    if (index == 0) {
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => HomeScreen(),
-          transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 300),
-        ),
-      );
-    } else if (index == 2) {
-      Navigator.push(
-        context,
-        PageRouteBuilder(
-          pageBuilder: (_, __, ___) => const Scaffold(
-            body: SafeArea(child: CollectionScreen()),
-          ),
-          transitionsBuilder: (_, animation, __, child) {
-            return FadeTransition(opacity: animation, child: child);
-          },
-          transitionDuration: const Duration(milliseconds: 300),
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      alignment: Alignment.bottomCenter,
-      children: [
-        Container(
-          padding: const EdgeInsets.only(top: 7, bottom: 5),
-          decoration: const BoxDecoration(
-            color: Color(0xFF222222),
-          ),
-          child: BottomNavigationBar(
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            currentIndex: _selectedIndex,
-            onTap: _onItemTapped,
-            selectedItemColor: const Color(0xFFE5C47E),
-            unselectedItemColor: Colors.white,
-            selectedFontSize: 16,
-            unselectedFontSize: 15,
-            showSelectedLabels: true,
-            showUnselectedLabels: true,
-            items: const [
-              BottomNavigationBarItem(
-                icon: Icon(Icons.apps, size: 24),
-                label: "Trang chủ",
-              ),
-              BottomNavigationBarItem(
-                icon: SizedBox.shrink(), // Nút giữa rỗng
-                label: "",
-              ),
-              BottomNavigationBarItem(
-                icon: Icon(Icons.collections_bookmark, size: 24),
-                label: "Bộ sưu tập",
-              ),
-            ],
-          ),
-        ),
-
-        // Nút giữa nổi
-        Positioned(
-          bottom: 25,
-          child: Container(
-            width: 62,
-            height: 62,
-            decoration: BoxDecoration(
-              color: const Color(0xFF8C89F8),
-              shape: BoxShape.circle,
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black26,
-                  blurRadius: 8,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Center(
-              child: IconButton(
-                icon: const Icon(
-                  Icons.photo_camera_outlined,
-                  color: Colors.white,
-                  size: 34,
-                ),
-                onPressed: () {
-                  RockImageRecognizer().pickAndRecognizeImage(context);
-                },
-              ),
-            ),
-          ),
-        ),
-      ],
     );
   }
 }

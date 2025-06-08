@@ -1,12 +1,18 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:nckh/models/rock_model.dart'; // Import RockModel
+import 'package:stonelens/models/rock_model.dart';
 
 class FrequentlyAskedQuestions extends StatefulWidget {
-  final RockModel rock; // Sử dụng RockModel để lấy dữ liệu câu hỏi
+  final RockModel? rock;
+  final String? stoneData;
+  final bool fromAI;
 
-  FrequentlyAskedQuestions({
-    required this.rock,
-  });
+  const FrequentlyAskedQuestions({
+    Key? key,
+    this.rock,
+    this.stoneData,
+    required this.fromAI,
+  }) : super(key: key);
 
   @override
   _FrequentlyAskedQuestionsState createState() =>
@@ -14,30 +20,44 @@ class FrequentlyAskedQuestions extends StatefulWidget {
 }
 
 class _FrequentlyAskedQuestionsState extends State<FrequentlyAskedQuestions> {
-  // List lưu trữ trạng thái mở rộng của mỗi câu hỏi
   late List<bool> _isExpandedList;
+  List<dynamic> _questions = [];
+  List<dynamic> _answers = [];
 
   @override
   void initState() {
     super.initState();
-    // Khởi tạo trạng thái mở rộng của mỗi câu hỏi từ dữ liệu ban đầu
-    _isExpandedList =
-        List.generate(widget.rock.cauHoi.length, (index) => false);
+
+    Map<String, dynamic> data = {};
+    if (widget.fromAI && widget.stoneData != null) {
+      try {
+        data = jsonDecode(widget.stoneData!);
+      } catch (e) {
+        debugPrint('Lỗi giải mã JSON FAQ: $e');
+      }
+    }
+
+    _questions =
+        widget.fromAI ? (data['cauHoi'] ?? []) : (widget.rock?.cauHoi ?? []);
+
+    _answers =
+        widget.fromAI ? (data['traLoi'] ?? []) : (widget.rock?.traLoi ?? []);
+
+    _isExpandedList = List.generate(_questions.length, (_) => false);
   }
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.all(16), // Padding ngoài cùng cho container
+      padding: EdgeInsets.all(16),
       child: Container(
-        padding: EdgeInsets.all(16), // Padding bên trong container
+        padding: EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white, // Màu nền của container
-          borderRadius:
-              BorderRadius.circular(12), // Bo tròn các góc của container
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Tạo bóng mờ cho container
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 8,
               offset: Offset(0, 4),
             ),
@@ -46,6 +66,7 @@ class _FrequentlyAskedQuestionsState extends State<FrequentlyAskedQuestions> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Tiêu đề
             Row(
               children: [
                 Image.asset(
@@ -53,30 +74,39 @@ class _FrequentlyAskedQuestionsState extends State<FrequentlyAskedQuestions> {
                   width: 30,
                   height: 30,
                 ),
-                SizedBox(width: 10), // Khoảng cách giữa icon và tiêu đề
+                SizedBox(width: 10),
                 Text(
-                  "Một số câu hỏi phổ biến", // Tiêu đề câu hỏi
+                  "Một số câu hỏi phổ biến",
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF303A53), // Màu tiêu đề
+                    color: Color(0xFF303A53),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 16), // Khoảng cách giữa tiêu đề và câu hỏi
+            SizedBox(height: 16),
 
-            // Các câu hỏi phổ biến
-            for (int i = 0; i < widget.rock.cauHoi.length; i++)
-              _buildQuestionAnswer(
-                  widget.rock.cauHoi[i], widget.rock.traLoi[i], i),
+            // Hiển thị danh sách hoặc thông báo
+            if (_questions.isEmpty)
+              Text(
+                "Chưa có câu hỏi nào.",
+                style: TextStyle(fontSize: 16, color: Colors.grey),
+              )
+            else
+              ...List.generate(_questions.length, (i) {
+                final question = _questions[i].toString();
+                final answer = i < _answers.length
+                    ? _answers[i].toString()
+                    : "Chưa có câu trả lời.";
+                return _buildQuestionAnswer(question, answer, i);
+              }),
           ],
         ),
       ),
     );
   }
 
-  // Mỗi câu hỏi và câu trả lời với ExpansionTile
   Widget _buildQuestionAnswer(String question, String answer, int index) {
     return ExpansionTile(
       title: Text(
@@ -84,25 +114,20 @@ class _FrequentlyAskedQuestionsState extends State<FrequentlyAskedQuestions> {
         style: TextStyle(
           fontSize: 18,
           fontWeight: FontWeight.bold,
-          color: Color(0xFF303A53), // Màu chữ câu hỏi
-        ),
-      ),
-      // Thay đổi biểu tượng chỉ khi câu hỏi đó mở rộng
-      trailing: AnimatedRotation(
-        duration: Duration(milliseconds: 200),
-        turns: _isExpandedList[index]
-            ? 0.5
-            : 0.0, // Quay biểu tượng chỉ khi mở rộng
-        child: Icon(
-          Icons.expand_more, // Biểu tượng cho "mở rộng"
           color: Color(0xFF303A53),
         ),
       ),
-      // Lắng nghe sự thay đổi trạng thái mở rộng của ExpansionTile
-      onExpansionChanged: (bool expanded) {
+      trailing: AnimatedRotation(
+        duration: Duration(milliseconds: 200),
+        turns: _isExpandedList[index] ? 0.5 : 0.0,
+        child: Icon(
+          Icons.expand_more,
+          color: Color(0xFF303A53),
+        ),
+      ),
+      onExpansionChanged: (expanded) {
         setState(() {
-          _isExpandedList[index] =
-              expanded; // Cập nhật trạng thái mở rộng cho câu hỏi cụ thể
+          _isExpandedList[index] = expanded;
         });
       },
       children: [
@@ -111,12 +136,11 @@ class _FrequentlyAskedQuestionsState extends State<FrequentlyAskedQuestions> {
           child: Container(
             padding: EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.grey[100], // Màu nền cho câu trả lời khi mở rộng
-              borderRadius:
-                  BorderRadius.circular(8), // Bo tròn các góc của câu trả lời
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(8),
             ),
             child: Text(
-              answer, // Sử dụng câu trả lời tương ứng từ RockModel
+              answer,
               style: TextStyle(fontSize: 15, color: Colors.black54),
             ),
           ),

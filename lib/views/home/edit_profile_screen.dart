@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/views/home/ChangePasswordScreen.dart';
-import 'package:nckh/services/user_service.dart';
-import 'package:nckh/widgets/Result/RockImageDialog_result.dart';
+import 'package:stonelens/views/home/ChangePasswordScreen.dart';
+import 'package:stonelens/services/user_service.dart';
+import 'package:stonelens/views/home/RockImageDialog_result.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:nckh/viewmodels/register_viewmodel.dart';
+import 'package:stonelens/viewmodels/register_viewmodel.dart';
 import 'package:provider/provider.dart';
 import 'login_screen.dart';
 

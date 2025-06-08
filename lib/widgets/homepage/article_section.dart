@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/views/home/post_screen.dart';
+import 'package:stonelens/views/home/post_screen.dart';
 
 class ArticleSection extends StatelessWidget {
   final List<Map<String, String>> articles = [

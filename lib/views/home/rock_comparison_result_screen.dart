@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/views/home/home_page.dart';
+import 'package:stonelens/views/home/bottom_nav_bar.dart';
 
 class RockComparisonResultScreen extends StatelessWidget {
   final Map<String, dynamic> firstStone;
@@ -43,7 +43,7 @@ class RockComparisonResultScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (_) => HomeScreen()),
+                        MaterialPageRoute(builder: (_) => MainScreen()),
                         (route) => false,
                       );
                     },

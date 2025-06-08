@@ -1,51 +1,51 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:nckh/models/rock_model.dart'; // Import RockModel
+import 'package:stonelens/models/rock_model.dart';
 
 class BasicCharacteristics extends StatelessWidget {
-  final RockModel rock; // Thêm tham số rock để sử dụng dữ liệu từ RockModel
+  final RockModel? rock;
+  final String? stoneData;
+  final bool fromAI;
 
-  BasicCharacteristics({
-    required this.rock,
-  });
+  const BasicCharacteristics({
+    Key? key,
+    this.rock,
+    this.stoneData,
+    required this.fromAI,
+  }) : super(key: key);
 
-  // Hàm xây dựng phần đặc điểm cơ bản
   Widget _buildInfoRow(String title, String value) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tiêu đề và giá trị
           Row(
             children: [
-              // Căn chỉnh tiêu đề ra ngoài
-              SizedBox(width: 0), // Khoảng cách bên trái cho tiêu đề
-              Container(
-                width: 120, // Cố định chiều rộng để căn chỉnh
+              SizedBox(
+                width: 140,
                 child: Text(
-                  '$title:', // Tiêu đề thông tin
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                  '$title:',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
                 ),
               ),
-              SizedBox(width: 8),
+              const SizedBox(width: 8),
               Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                      left: 0), // Thêm padding từ bên trái cho giá trị
-                  child: Text(
-                    value, // Giá trị của thông tin
-                    style: TextStyle(fontSize: 18, color: Colors.black),
+                child: Text(
+                  value,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    color: Colors.black87,
                   ),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 8),
-          // Thêm đường kẻ phân cách
-          Divider(
-            color: Colors.black.withOpacity(0.3),
-            thickness: 1,
-          ),
+          const SizedBox(height: 8),
+          Divider(color: Colors.grey.shade300, thickness: 1),
         ],
       ),
     );
@@ -53,51 +53,74 @@ class BasicCharacteristics extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Parse JSON nếu đến từ AI
+    Map<String, dynamic> data = {};
+    if (fromAI && stoneData != null) {
+      try {
+        data = jsonDecode(stoneData!);
+      } catch (e) {
+        debugPrint('Lỗi parse stoneData: $e');
+      }
+    }
+
+    // Lấy dữ liệu từ nguồn phù hợp
+    final String congThucHoaHoc = fromAI
+        ? (data['thanhPhanHoaHoc'] ?? 'Chưa có dữ liệu')
+        : (rock?.thanhPhanHoaHoc ?? 'Chưa có dữ liệu');
+
+    final String doCung = fromAI
+        ? (data['doCung']?.toString() ?? 'Chưa có dữ liệu')
+        : (rock?.doCung?.toString() ?? 'Chưa có dữ liệu');
+
+    final String mauSac = fromAI
+        ? (data['mauSac'] ?? 'Chưa có dữ liệu')
+        : (rock?.mauSac ?? 'Chưa có dữ liệu');
+
+    final String matDo = fromAI
+        ? (data['matDo']?.toString() ?? 'Chưa có dữ liệu')
+        : (rock?.matDo?.toString() ?? 'Chưa có dữ liệu');
+
     return Padding(
-      padding: EdgeInsets.all(16), // Padding ngoài cùng cho container
+      padding: const EdgeInsets.all(16),
       child: Container(
-        padding: EdgeInsets.all(16), // Padding bên trong container
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white, // Màu nền của container
-          borderRadius:
-              BorderRadius.circular(14), // Bo tròn các góc của container
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Tạo bóng mờ cho container
+              color: Colors.black12,
               blurRadius: 8,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Tiêu đề chính "Đặc điểm cơ bản"
             Row(
               children: [
                 Image.asset(
-                  'assets/icon_basic.png', // Đường dẫn tới file ảnh icon của bạn
-                  width: 30,
-                  height: 30,
+                  'assets/icon_basic.png',
+                  width: 28,
+                  height: 28,
                 ),
-                SizedBox(width: 16), // Khoảng cách giữa icon và tiêu đề
-                Text(
-                  "Đặc điểm cơ bản", // Tiêu đề chính
+                const SizedBox(width: 12),
+                const Text(
+                  "Đặc điểm cơ bản",
                   style: TextStyle(
-                    fontSize: 24,
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF303A53), // Màu tiêu đề
+                    color: Color(0xFF303A53),
                   ),
                 ),
               ],
             ),
-            SizedBox(height: 16), // Khoảng cách giữa tiêu đề và các thông tin
-
-            // Các thông tin đặc điểm cơ bản
-            _buildInfoRow('Công thức hóa học', rock.thanhPhanHoaHoc),
-            _buildInfoRow('Độ cứng', rock.doCung.toString()),
-            _buildInfoRow('Màu sắc', rock.mauSac),
-            _buildInfoRow('Mật độ', rock.matDo.toString()),
+            const SizedBox(height: 20),
+            _buildInfoRow('Công thức hóa học', congThucHoaHoc),
+            _buildInfoRow('Độ cứng', doCung),
+            _buildInfoRow('Màu sắc', mauSac),
+            _buildInfoRow('Mật độ', matDo),
           ],
         ),
       ),

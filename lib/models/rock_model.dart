@@ -41,7 +41,9 @@ class RockModel {
     required this.hinhAnh,
   });
 
-  factory RockModel.fromJson(Map<String, dynamic> json) {
+  factory RockModel.fromJson(
+    Map<String, dynamic> json,
+  ) {
     return RockModel(
       id: json['id'] ?? '',
       tenDa: json['tenDa'] ?? '',

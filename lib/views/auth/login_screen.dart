@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:stonelens/views/home/bottom_nav_bar.dart';
 import 'package:provider/provider.dart';
-import 'package:nckh/viewmodels/login_viewmodel.dart';
-import 'package:nckh/views/auth/forgotpassworl_screen.dart';
-import 'package:nckh/views/auth/register_screen.dart';
-import 'package:nckh/views/home/home_page.dart';
+import 'package:stonelens/viewmodels/login_viewmodel.dart';
+import 'package:stonelens/views/auth/forgotpassworl_screen.dart';
+import 'package:stonelens/views/auth/register_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Chuyển tới màn hình Home sau khi đăng nhập thành công
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => MainScreen()),
         );
       }
     } catch (e) {

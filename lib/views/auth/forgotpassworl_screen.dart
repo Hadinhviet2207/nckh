@@ -1,7 +1,7 @@
 // lib/views/forgot_password_screen.dart
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:nckh/viewmodels/forgot_password_viewmodel.dart';
+import 'package:stonelens/viewmodels/forgot_password_viewmodel.dart';
 import 'package:provider/provider.dart'; // Để sử dụng Provider
 
 class ForgotPasswordScreen extends StatelessWidget {

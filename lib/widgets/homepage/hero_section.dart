@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/viewmodels/rock_image_recognizer.dart';
-import 'package:nckh/views/home/rock_comparison_selection_screen.dart'; // Import file màn hình kết quả
+import 'package:stonelens/ScannerScreen.dart';
+import 'package:stonelens/viewmodels/rock_image_recognizer.dart';
+import 'package:stonelens/views/home/rock_comparison_selection_screen.dart'; // Import file màn hình kết quả
 
 class HeroSection extends StatelessWidget {
   @override
@@ -75,13 +76,16 @@ class HeroSection extends StatelessWidget {
                 icon: Icons.camera_alt,
                 text: "Nhận biết bằng hình ảnh",
                 onTap: () {
-                  RockImageRecognizer().pickAndRecognizeImage(context);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => ScannerScreen()),
+                  );
                 },
               ),
               SizedBox(width: 20), // Thêm khoảng cách giữa hai nút
               ActionButton(
                 icon: Icons.compare,
-                text: "So sánh các mẫu đá",
+                text: "Phân biệt các loại đá",
                 onTap: () {
                   Navigator.pushReplacement(
                     context,

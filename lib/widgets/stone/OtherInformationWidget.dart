@@ -1,26 +1,63 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:nckh/models/rock_model.dart'; // Import RockModel
+import 'package:stonelens/models/rock_model.dart';
 
 class OtherInformationWidget extends StatelessWidget {
-  final RockModel rock; // Sử dụng RockModel để lấy dữ liệu đá
+  final RockModel? rock;
+  final String? stoneData; // Giờ là JSON string nếu fromAI = true
+  final bool fromAI;
 
-  OtherInformationWidget({required this.rock});
+  const OtherInformationWidget({
+    this.rock,
+    this.stoneData,
+    required this.fromAI,
+    Key? key,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    Map<String, dynamic> parsedData = {};
+
+    if (fromAI && stoneData != null) {
+      try {
+        parsedData = jsonDecode(stoneData!);
+      } catch (e) {
+        debugPrint('❌ Lỗi khi giải mã JSON trong OtherInformation: $e');
+      }
+    }
+
+    // Hàm lấy dữ liệu theo key
+    String getData(String key) {
+      if (fromAI) {
+        return parsedData[key]?.toString() ?? 'Chưa có dữ liệu';
+      } else {
+        switch (key) {
+          case 'thanhPhanKhoangSan':
+            return rock?.thanhPhanKhoangSan ?? 'Chưa có dữ liệu';
+          case 'congDung':
+            return rock?.congDung ?? 'Chưa có dữ liệu';
+          case 'noiPhanBo':
+            return rock?.noiPhanBo ?? 'Chưa có dữ liệu';
+          case 'motSoKhoangSanLienQuan':
+            return rock?.motSoKhoangSanLienQuan ?? 'Chưa có dữ liệu';
+          default:
+            return 'Chưa có dữ liệu';
+        }
+      }
+    }
+
     return Padding(
-      padding: EdgeInsets.all(16), // Padding ngoài cùng cho container
+      padding: const EdgeInsets.all(16),
       child: Container(
-        padding: EdgeInsets.all(16), // Padding bên trong container
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white, // Màu nền của container
-          borderRadius:
-              BorderRadius.circular(14), // Bo tròn các góc của container
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1), // Tạo bóng mờ cho container
+              color: Colors.black.withOpacity(0.1),
               blurRadius: 8,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -31,12 +68,12 @@ class OtherInformationWidget extends StatelessWidget {
             Row(
               children: [
                 Image.asset(
-                  'assets/icon_ttk.png', // Đường dẫn tới ảnh icon_ttk.png
-                  width: 30, // Điều chỉnh kích thước của ảnh nếu cần
+                  'assets/icon_ttk.png',
+                  width: 30,
                   height: 30,
                 ),
-                SizedBox(width: 8),
-                Text(
+                const SizedBox(width: 8),
+                const Text(
                   'Một số thông tin khác',
                   style: TextStyle(
                     fontSize: 24,
@@ -46,26 +83,27 @@ class OtherInformationWidget extends StatelessWidget {
                 ),
               ],
             ),
-            SizedBox(height: 12),
-            // Tiêu đề và phần mô tả
-            _buildTitleWithDescription(
+            const SizedBox(height: 12),
+
+            // Các thông tin
+            _buildItem(
               title: '• Thành phần khoáng sản:',
-              description: rock.thanhPhanKhoangSan,
+              value: getData('thanhPhanKhoangSan'),
             ),
-            SizedBox(height: 12),
-            _buildTitleWithDescription(
+            const SizedBox(height: 12),
+            _buildItem(
               title: '• Công dụng của khoáng sản:',
-              description: rock.congDung,
+              value: getData('congDung'),
             ),
-            SizedBox(height: 12),
-            _buildTitleWithDescription(
+            const SizedBox(height: 12),
+            _buildItem(
               title: '• Nơi phân bố:',
-              description: rock.noiPhanBo,
+              value: getData('noiPhanBo'),
             ),
-            SizedBox(height: 12),
-            _buildTitleWithDescription(
+            const SizedBox(height: 12),
+            _buildItem(
               title: '• Một số khoáng sản liên quan:',
-              description: rock.motSoKhoangSanLienQuan,
+              value: getData('motSoKhoangSanLienQuan'),
             ),
           ],
         ),
@@ -73,33 +111,28 @@ class OtherInformationWidget extends StatelessWidget {
     );
   }
 
-  // Widget để tạo phần tiêu đề và văn bản mô tả
-  Widget _buildTitleWithDescription(
-      {required String title, required String description}) {
+  Widget _buildItem({required String title, required String value}) {
     return Padding(
-      padding: const EdgeInsets.only(left: 2), // Lùi vào một chút từ trái
+      padding: const EdgeInsets.only(left: 2),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Tiêu đề
           Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 19,
               fontWeight: FontWeight.bold,
-              color: Colors.orange, // Màu cam cho tiêu đề
+              color: Colors.orange,
             ),
           ),
-          SizedBox(height: 8), // Khoảng cách giữa tiêu đề và mô tả
-          // Văn bản mô tả
+          const SizedBox(height: 8),
           Padding(
-            padding: const EdgeInsets.only(
-                left: 8.0), // Lùi vào một chút so với tiêu đề
+            padding: const EdgeInsets.only(left: 8.0),
             child: Text(
-              description,
-              style: TextStyle(
+              value,
+              style: const TextStyle(
                 fontSize: 17,
-                color: Color(0xFF303A53), // Màu mặc định cho phần văn bản mô tả
+                color: Color(0xFF303A53),
               ),
             ),
           ),

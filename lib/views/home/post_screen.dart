@@ -59,7 +59,7 @@ class PostScreen extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Đây là nội dung mẫu cho bài viết. Bạn có thể thay đổi để phù hợp với bài viết cụ thể. Đây là nội dung mẫu cho bài viết. Bạn có thể thay đổi để phù hợp với bài viết cụ thể. Đây là nội dung mẫu cho bài viết. Bạn có thể thay đổi để phù hợp với bài viết cụ thể. Đây là nội dung mẫu cho bài viết. Bạn có thể thay đổi để phù hợp với bài viết cụ thể.',
+              'Đá được hình thành qua ba quá trình chính của tự nhiên: đá magma hình thành khi dung nham nguội đi và kết tinh, đá trầm tích hình thành từ sự tích tụ và nén ép các mảnh vụn tự nhiên như cát, bùn, vỏ sinh vật, còn đá biến chất là kết quả của sự biến đổi đá gốc dưới tác động của nhiệt độ và áp suất cao. Mỗi loại đá mang trong mình một hành trình riêng – từ lửa cháy sâu trong lòng đất, đến những dòng sông mang phù sa, cho đến sự tái sinh mạnh mẽ dưới áp lực thời gian. Đá không chỉ là vật chất, mà là ký ức hóa thạch của Trái Đất qua hàng triệu năm chuyển mình.',
               style: TextStyle(fontSize: 16, height: 1.6),
               textAlign: TextAlign.justify,
             ),

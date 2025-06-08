@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:stonelens/models/rock_model.dart';
+import 'package:stonelens/services/favorite_service.dart';
+import 'package:stonelens/views/home/StoneDetailScreen.dart';
 
 class SearchScreen extends StatefulWidget {
   @override
@@ -6,8 +10,96 @@ class SearchScreen extends StatefulWidget {
 }
 
 class _SearchScreenState extends State<SearchScreen> {
-  TextEditingController _searchController = TextEditingController();
-  List<String> _suggestions = ["Biotit", "Biotit"];
+  final TextEditingController _searchController = TextEditingController();
+  List<RockModel> _suggestions = [];
+  List<RockModel> _searchResults = [];
+  bool _loading = true;
+  bool _searchLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchRandomRocks();
+    _searchController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchController.removeListener(_onSearchChanged);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchRandomRocks() async {
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('_rocks').get();
+      final allRocks = querySnapshot.docs.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        data['id'] = doc.id;
+        final rock = RockModel.fromJson(data);
+        print(
+            'Document ID: ${doc.id}, Rock ID: ${rock.id}, Name: ${rock.tenDa}');
+        return rock;
+      }).toList();
+
+      allRocks.shuffle();
+      final random3 = allRocks.length > 3 ? allRocks.sublist(0, 3) : allRocks;
+
+      setState(() {
+        _suggestions = random3;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _loading = false;
+      });
+      print('Lỗi khi tải đá: $e');
+    }
+  }
+
+  void _onSearchChanged() {
+    final query = _searchController.text.trim();
+    if (query.isNotEmpty) {
+      _searchRocks(query);
+    } else {
+      setState(() {
+        _searchResults = [];
+        _searchLoading = false;
+      });
+    }
+  }
+
+  Future<void> _searchRocks(String query) async {
+    setState(() {
+      _searchLoading = true;
+    });
+
+    try {
+      final querySnapshot =
+          await FirebaseFirestore.instance.collection('_rocks').get();
+      final results = querySnapshot.docs
+          .map((doc) {
+            final data = doc.data() as Map<String, dynamic>;
+            data['id'] = doc.id;
+            return RockModel.fromJson(data);
+          })
+          .where((rock) =>
+              (rock.tenDa?.toLowerCase() ?? '').contains(query.toLowerCase()) ||
+              (rock.loaiDa?.toLowerCase() ?? '').contains(query.toLowerCase()))
+          .toList();
+
+      setState(() {
+        _searchResults = results;
+        _searchLoading = false;
+      });
+    } catch (e) {
+      print('Lỗi khi tìm kiếm đá: $e');
+      setState(() {
+        _searchLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,53 +111,64 @@ class _SearchScreenState extends State<SearchScreen> {
         elevation: 0,
         title: _buildSearchBar(),
         actions: [
-          // Dấu X bên ngoài AppBar để thoát trang, có vòng tròn bao quanh
           Padding(
-            padding:
-                const EdgeInsets.only(right: 16), // Tạo khoảng cách đều hơn
+            padding: const EdgeInsets.only(right: 16),
             child: GestureDetector(
-              onTap: () {
-                Navigator.pop(context); // Đóng trang khi nhấn X ngoài
-              },
+              onTap: () => Navigator.pop(context),
               child: Container(
-                padding: EdgeInsets.all(6), // Giảm padding để vòng tròn nhỏ hơn
+                padding: const EdgeInsets.all(6),
                 decoration: BoxDecoration(
-                  color: Colors.white, // Màu nền của vòng tròn là trắng
-                  shape: BoxShape.circle, // Bao quanh dấu "X" với hình tròn
+                  color: Colors.white,
+                  shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.black.withOpacity(0.7), // Viền đen, nhẹ nhàng
-                    width: 1.5, // Độ dày viền mỏng hơn
+                    color: Colors.black.withOpacity(0.7),
+                    width: 1.5,
                   ),
                 ),
-                child: Icon(
-                  Icons.close,
-                  color: Colors.black, // Màu dấu "X" là đen
-                  size: 20, // Dấu "X" nhỏ hơn, hợp với vòng tròn
-                ),
+                child: const Icon(Icons.close, color: Colors.black, size: 20),
               ),
             ),
           ),
         ],
       ),
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(height: 8),
-            Text(
-              "Một số gợi ý dành cho bạn",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                if (_searchController.text.isEmpty) ...[
+                  const Text(
+                    "Một số gợi ý dành cho bạn",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_loading)
+                    const Center(child: CircularProgressIndicator())
+                  else
+                    _buildSuggestions(context, constraints.maxHeight),
+                ],
+                if (_searchController.text.isNotEmpty) ...[
+                  const Text(
+                    "Kết quả tìm kiếm",
+                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  if (_searchLoading)
+                    const Center(child: CircularProgressIndicator())
+                  else
+                    Expanded(child: _buildSearchResults()),
+                ],
+              ],
             ),
-            SizedBox(height: 12),
-            _buildSuggestions(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  /// 🔍 **Thanh tìm kiếm có dấu X bên trong**
   Widget _buildSearchBar() {
     return Container(
       height: 40,
@@ -75,146 +178,295 @@ class _SearchScreenState extends State<SearchScreen> {
       ),
       child: Row(
         children: [
-          SizedBox(width: 12),
-          Icon(Icons.search, color: Colors.black54),
+          const SizedBox(width: 12),
+          const Icon(Icons.search, color: Colors.black54),
           Expanded(
             child: TextField(
               controller: _searchController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                 hintText: "Tìm kiếm bằng đá và khoáng sản...",
                 border: InputBorder.none,
                 contentPadding:
                     EdgeInsets.symmetric(horizontal: 8, vertical: 10),
               ),
-              onChanged: (value) {
-                setState(() {}); // Cập nhật lại giao diện khi nhập
-              },
             ),
           ),
-          // Dấu "X" bên trong để xóa văn bản khi có nội dung
-          if (_searchController.text.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.only(right: 12), // Căn chỉnh dấu "X"
-              child: IconButton(
-                icon: Icon(Icons.close, color: Colors.black54),
-                onPressed: () {
-                  setState(() {
-                    _searchController
-                        .clear(); // Xóa văn bản trong thanh tìm kiếm
-                  });
-                },
-              ),
-            ),
         ],
       ),
     );
   }
 
-  /// 🪨 **Danh sách gợi ý**
-  Widget _buildSuggestions() {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: Row(
-        children: _suggestions.map((rock) {
-          return GestureDetector(
-            onTap: () {},
-            child: Container(
-              margin: EdgeInsets.only(right: 12),
-              child: RockCard(
-                name: rock,
-                imagePath:
-                    "assets/demo_1.jpg", // Đổi đường dẫn hình ảnh nếu cần
-                category: "Đá Magma, Đá biến chất",
-              ),
-            ),
+  Widget _buildSuggestions(BuildContext context, double maxHeight) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    // Tính toán kích thước động dựa trên màn hình
+    final itemWidth = screenWidth * 0.35; // 35% chiều rộng màn hình
+    final itemHeight = maxHeight * 0.20; // 20% chiều cao màn hình, tối đa 180
+    final imageHeight = itemHeight * 0.55; // Hình ảnh chiếm 55% chiều cao mục
+
+    return SizedBox(
+      height: itemHeight.clamp(120, 180), // Giới hạn chiều cao từ 120 đến 180
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: _suggestions.length,
+        itemBuilder: (context, index) {
+          final rock = _suggestions[index];
+          return Container(
+            width:
+                itemWidth.clamp(100, 160), // Giới hạn chiều rộng từ 100 đến 160
+            margin: const EdgeInsets.only(right: 8), // Giảm margin để gọn hơn
+            child: _buildRockItem(rock,
+                isSuggestion: true, imageHeight: imageHeight),
           );
-        }).toList(),
+        },
       ),
     );
   }
-}
 
-class RockCard extends StatefulWidget {
-  final String name;
-  final String imagePath;
-  final String category;
+  Widget _buildSearchResults() {
+    if (_searchResults.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 20),
+          child: Text(
+            "Không tìm thấy kết quả",
+            style: TextStyle(fontSize: 16, color: Colors.grey),
+          ),
+        ),
+      );
+    }
+    return ListView.builder(
+      itemCount: _searchResults.length,
+      itemBuilder: (context, index) {
+        final rock = _searchResults[index];
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 12),
+          child: _buildRockItem(rock, isSuggestion: false),
+        );
+      },
+    );
+  }
 
-  RockCard(
-      {required this.name, required this.imagePath, required this.category});
+  Widget _buildRockItem(RockModel rock,
+      {required bool isSuggestion, double? imageHeight}) {
+    if (isSuggestion) {
+      final favoriteService = FavoriteService();
 
-  @override
-  _RockCardState createState() => _RockCardState();
-}
+      void toggleFavorite(bool currentStatus) async {
+        print('Nhấn nút yêu thích cho rockId: ${rock.id}');
+        try {
+          await favoriteService.toggleFavorite(rock.id, !currentStatus);
+          print(
+              'Thay đổi trạng thái yêu thích thành công: ${!currentStatus ? 'Thêm' : 'Xóa'} yêu thích cho ${rock.id}');
+        } catch (e) {
+          print('Lỗi khi thay đổi trạng thái yêu thích: $e');
+        }
+      }
 
-class _RockCardState extends State<RockCard> {
-  bool isFavorite = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      color: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      elevation: 3,
-      child: Container(
-        width: 140, // Kích thước nhỏ như trong ảnh mẫu
-        padding: EdgeInsets.all(8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Image.asset(
-                widget.imagePath,
-                width: double.infinity,
-                height: 100,
-                fit: BoxFit.cover,
-              ),
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StoneDetailScreen(rock: rock),
             ),
-            SizedBox(height: 8),
-            Text(
-              widget.name,
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            Row(
-              children: [
-                Icon(Icons.share, size: 14, color: Colors.black54),
-                SizedBox(width: 4),
-                Expanded(
-                  child: Text(
-                    widget.category,
-                    style: TextStyle(fontSize: 14, color: Colors.black54),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-            Align(
-              alignment: Alignment.bottomRight,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() => isFavorite = !isFavorite);
-                },
-                child: Container(
-                  padding: EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(color: Colors.black12, blurRadius: 3)
+          );
+        },
+        child: ClipRect(
+          child: Card(
+            color: Colors.white,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            elevation: 2,
+            child: Container(
+              padding: const EdgeInsets.all(6), // Giảm padding để gọn hơn
+              child: Stack(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: (rock.hinhAnh != null && rock.hinhAnh.isNotEmpty)
+                            ? Image.network(
+                                rock.hinhAnh.first,
+                                width: double.infinity,
+                                height:
+                                    imageHeight ?? 80, // Sử dụng chiều cao động
+                                fit: BoxFit.cover,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    Container(
+                                  width: double.infinity,
+                                  height: imageHeight ?? 80,
+                                  color: Colors.grey[300],
+                                  child: const Icon(Icons.image_not_supported,
+                                      size: 30),
+                                ),
+                              )
+                            : Container(
+                                width: double.infinity,
+                                height: imageHeight ?? 80,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.image_not_supported,
+                                    size: 30),
+                              ),
+                      ),
+                      const SizedBox(height: 6), // Giảm khoảng cách
+                      Text(
+                        rock.tenDa ?? 'Unknown',
+                        style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14), // Giảm font
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Row(
+                        children: [
+                          const Icon(Icons.category,
+                              size: 12,
+                              color: Colors.black54), // Giảm kích thước icon
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              rock.loaiDa ?? 'Unknown',
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54), // Giảm font
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
-                  child: Icon(
-                    isFavorite ? Icons.favorite : Icons.favorite_border,
-                    color: isFavorite ? Colors.red : Colors.black54,
-                    size: 22,
+                  Positioned(
+                    bottom: 0,
+                    right: 0,
+                    child: StreamBuilder<bool>(
+                      stream: favoriteService.rockFavoriteStatusStream(rock.id),
+                      initialData: false,
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
+                          return const CircularProgressIndicator(
+                              strokeWidth: 2);
+                        }
+                        bool isFavorite = snapshot.data ?? false;
+                        print(
+                            'Trạng thái yêu thích của ${rock.id}: $isFavorite');
+                        return IconButton(
+                          onPressed: rock.id.isEmpty
+                              ? null
+                              : () => toggleFavorite(isFavorite),
+                          icon: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 300),
+                            transitionBuilder: (child, animation) =>
+                                ScaleTransition(
+                              scale: animation,
+                              child: child,
+                            ),
+                            child: Icon(
+                              isFavorite
+                                  ? Icons.favorite
+                                  : Icons.favorite_border,
+                              key: ValueKey<bool>(isFavorite),
+                              color: isFavorite
+                                  ? Colors.red
+                                  : rock.id.isEmpty
+                                      ? Colors.grey
+                                      : Colors.grey,
+                              size: 24, // Giảm kích thước icon
+                            ),
+                          ),
+                        );
+                      },
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
-    );
+      );
+    } else {
+      return GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => StoneDetailScreen(rock: rock),
+            ),
+          );
+        },
+        child: Material(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          elevation: 2,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(12),
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: (rock.hinhAnh != null && rock.hinhAnh.isNotEmpty)
+                        ? Image.network(
+                            rock.hinhAnh.first,
+                            width: 80,
+                            height: 80,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) =>
+                                Container(
+                              width: 80,
+                              height: 80,
+                              color: Colors.grey[300],
+                              child: const Icon(Icons.image_not_supported,
+                                  size: 40),
+                            ),
+                          )
+                        : Container(
+                            width: 80,
+                            height: 80,
+                            color: Colors.grey[300],
+                            child:
+                                const Icon(Icons.image_not_supported, size: 40),
+                          ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          rock.tenDa ?? 'Unknown',
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          rock.loaiDa ?? 'Unknown',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
   }
 }

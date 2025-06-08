@@ -1,6 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:nckh/views/home/home_page.dart';
+import 'package:stonelens/views/home/bottom_nav_bar.dart';
 import 'rock_second_selection_screen.dart';
 
 class RockFirstSelectionScreen extends StatefulWidget {
@@ -54,7 +54,7 @@ class _RockFirstSelectionScreenState extends State<RockFirstSelectionScreen> {
               onTap: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                  MaterialPageRoute(builder: (context) => MainScreen()),
                 );
               },
               child: Container(

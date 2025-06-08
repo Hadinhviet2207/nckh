@@ -1,6 +1,6 @@
 // lib/view_models/forgot_password_view_model.dart
 import 'package:flutter/material.dart';
-import 'package:nckh/models/forgot_password_model.dart';
+import 'package:stonelens/models/forgot_password_model.dart';
 
 class ForgotPasswordViewModel extends ChangeNotifier {
   bool _isLoading = false;

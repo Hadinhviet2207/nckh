@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:nckh/viewmodels/register_viewmodel.dart';
-import 'package:nckh/views/auth/register_screen.dart';
+import 'package:stonelens/viewmodels/register_viewmodel.dart';
+import 'package:stonelens/views/auth/register_screen.dart';
 import 'package:provider/provider.dart';
 
 class OnboardingScreen extends StatefulWidget {

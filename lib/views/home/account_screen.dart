@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/services/RockImageDialog.dart';
-import 'package:nckh/services/upload_service.dart';
+import 'package:stonelens/services/RockImageDialog.dart';
+import 'package:stonelens/services/upload_service.dart';
 
-import 'package:nckh/services/user_service.dart';
-import 'package:nckh/views/home/edit_profile_screen.dart';
-import 'package:nckh/widgets/Result/RockImageDialog_result.dart';
+import 'package:stonelens/services/user_service.dart';
+import 'package:stonelens/views/home/edit_profile_screen.dart';
+import 'package:stonelens/views/home/RockImageDialog_result.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});

@@ -1,28 +1,81 @@
 import 'package:flutter/material.dart';
-import 'package:nckh/models/rock_model.dart'; // Đảm bảo bạn import đúng model
-import 'package:nckh/services/favorite_service.dart';
-import 'package:nckh/widgets/stone/Description_widget.dart';
-import 'package:nckh/widgets/stone/FrequentlyAskedQuestions.dart';
-import 'package:nckh/widgets/stone/OtherInformationWidget.dart';
-import 'package:nckh/widgets/stone/StructureAndComposition.dart';
-import 'package:nckh/widgets/stone/basic_characteristics.dart';
-import 'package:nckh/views/home/add_colection.dart';
-import 'package:nckh/widgets/stone/stone_info_widget.dart';
+import 'package:stonelens/ScannerScreen.dart';
+import 'package:stonelens/models/rock_model.dart';
+import 'package:stonelens/services/favorite_service.dart';
+import 'package:stonelens/widgets/stone/Description_widget.dart';
+import 'package:stonelens/widgets/stone/FrequentlyAskedQuestions.dart';
+import 'package:stonelens/widgets/stone/OtherInformationWidget.dart';
+import 'package:stonelens/widgets/stone/StructureAndComposition.dart';
+import 'package:stonelens/widgets/stone/basic_characteristics.dart';
+import 'package:stonelens/views/colection/add_colection.dart';
+import 'package:stonelens/widgets/stone/stone_info_widget.dart';
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class CollectionService {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Stream<bool> checkRockInUserCollection(String rockId) {
+    final userId = _auth.currentUser?.uid;
+    print('Checking rockId: $rockId for userId: $userId');
+
+    if (rockId.isEmpty || userId == null) {
+      print('Invalid rockId or missing userId, returning false');
+      return Stream.value(false);
+    }
+
+    return _firestore
+        .collection('users')
+        .doc(userId)
+        .collection('collections')
+        .where('rock_id', isEqualTo: rockId)
+        .snapshots()
+        .map((snapshot) {
+      final isInCollection = snapshot.docs.isNotEmpty;
+      print('Firestore query result: $isInCollection for rockId: $rockId');
+      return isInCollection;
+    });
+  }
+}
 
 class StoneDetailScreen extends StatefulWidget {
-  final RockModel rock;
+  final RockModel? rock;
+  final String? stoneData;
 
-  const StoneDetailScreen({super.key, required this.rock});
+  const StoneDetailScreen({Key? key, this.rock, this.stoneData})
+      : super(key: key);
 
   @override
   _StoneDetailScreenState createState() => _StoneDetailScreenState();
 }
 
 class _StoneDetailScreenState extends State<StoneDetailScreen> {
-  final _favoriteService = FavoriteService();
+  final FavoriteService _favoriteService = FavoriteService();
+  final CollectionService _collectionService = CollectionService();
+
+  late final RockModel rock;
+  late final bool fromAI;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.stoneData != null && widget.stoneData!.isNotEmpty) {
+      final Map<String, dynamic> parsedJson = jsonDecode(widget.stoneData!);
+      rock = RockModel.fromJson(parsedJson);
+      fromAI = true;
+    } else if (widget.rock != null) {
+      rock = widget.rock!;
+      fromAI = false;
+    } else {
+      throw Exception('StoneDetailScreen requires either rock or stoneData');
+    }
+    print('RockId ${rock.id}'); // Debug log
+  }
 
   void _toggleFavorite(bool currentStatus) async {
-    await _favoriteService.toggleFavorite(widget.rock.id, !currentStatus);
+    await _favoriteService.toggleFavorite(rock.id, !currentStatus);
   }
 
   @override
@@ -47,6 +100,7 @@ class _StoneDetailScreenState extends State<StoneDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Ảnh đá với Hero animation
                     Stack(
                       children: [
                         Hero(
@@ -54,7 +108,7 @@ class _StoneDetailScreenState extends State<StoneDetailScreen> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(12),
                             child: Image.network(
-                              widget.rock.hinhAnh[0],
+                              rock.hinhAnh.isNotEmpty ? rock.hinhAnh[0] : '',
                               width: double.infinity,
                               height: 250,
                               fit: BoxFit.cover,
@@ -86,7 +140,10 @@ class _StoneDetailScreenState extends State<StoneDetailScreen> {
                         ),
                       ],
                     ),
+
                     const SizedBox(height: 16),
+
+                    // Tiêu đề đá & loại đá
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -96,7 +153,7 @@ class _StoneDetailScreenState extends State<StoneDetailScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                widget.rock.tenDa,
+                                rock.tenDa,
                                 style: const TextStyle(
                                   fontSize: 28,
                                   fontWeight: FontWeight.bold,
@@ -104,7 +161,7 @@ class _StoneDetailScreenState extends State<StoneDetailScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Loại đá: ${widget.rock.loaiDa}',
+                                'Loại đá: ${rock.loaiDa}',
                                 style: const TextStyle(
                                   fontSize: 18,
                                   color: Color(0xFFE57C3B),
@@ -113,30 +170,27 @@ class _StoneDetailScreenState extends State<StoneDetailScreen> {
                             ],
                           ),
                         ),
-                        // Dùng StreamBuilder để cập nhật real-time trạng thái yêu thích
+
+                        // Nút yêu thích
                         StreamBuilder<bool>(
                           stream: _favoriteService
-                              .rockFavoriteStatusStream(widget.rock.id),
+                              .rockFavoriteStatusStream(rock.id),
                           builder: (context, snapshot) {
                             final isFavorite = snapshot.data ?? false;
                             return IconButton(
                               onPressed: () => _toggleFavorite(isFavorite),
-                              icon: Padding(
-                                padding: const EdgeInsets.only(right: 20),
-                                child: AnimatedSwitcher(
-                                  duration: const Duration(milliseconds: 300),
-                                  transitionBuilder: (child, animation) =>
-                                      ScaleTransition(
-                                          scale: animation, child: child),
-                                  child: Icon(
-                                    isFavorite
-                                        ? Icons.favorite
-                                        : Icons.favorite_border,
-                                    key: ValueKey<bool>(isFavorite),
-                                    color:
-                                        isFavorite ? Colors.red : Colors.grey,
-                                    size: 28,
-                                  ),
+                              icon: AnimatedSwitcher(
+                                duration: const Duration(milliseconds: 300),
+                                transitionBuilder: (child, animation) =>
+                                    ScaleTransition(
+                                        scale: animation, child: child),
+                                child: Icon(
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  key: ValueKey<bool>(isFavorite),
+                                  color: isFavorite ? Colors.red : Colors.grey,
+                                  size: 28,
                                 ),
                               ),
                             );
@@ -144,28 +198,36 @@ class _StoneDetailScreenState extends State<StoneDetailScreen> {
                         ),
                       ],
                     ),
-                    // Dùng lại trạng thái yêu thích nếu muốn truyền xuống các widget con
-                    StreamBuilder<bool>(
-                      stream: _favoriteService
-                          .rockFavoriteStatusStream(widget.rock.id),
-                      builder: (context, snapshot) {
-                        final isFavorite = snapshot.data ?? false;
-                        return AnimatedOpacity(
-                          opacity: 1.0,
-                          duration: const Duration(milliseconds: 400),
-                          child: StoneInfoWidget(
-                            rock: widget.rock,
-                            isFavorite: isFavorite,
-                            onFavoriteToggle: () => _toggleFavorite(isFavorite),
-                          ),
-                        );
-                      },
+
+                    // Các widget hiển thị thông tin đá
+                    StoneInfoWidget(
+                      rock: rock,
+                      stoneData: widget.stoneData,
+                      fromAI: fromAI,
+                      isFavorite: false,
+                      onFavoriteToggle: () {},
                     ),
-                    Description(rock: widget.rock),
-                    BasicCharacteristics(rock: widget.rock),
-                    StructureAndComposition(rock: widget.rock),
-                    FrequentlyAskedQuestions(rock: widget.rock),
-                    OtherInformationWidget(rock: widget.rock),
+
+                    Description(
+                        rock: rock,
+                        stoneData: widget.stoneData,
+                        fromAI: fromAI),
+                    BasicCharacteristics(
+                        rock: rock,
+                        stoneData: widget.stoneData,
+                        fromAI: fromAI),
+                    StructureAndComposition(
+                        rock: rock,
+                        stoneData: widget.stoneData,
+                        fromAI: fromAI),
+                    FrequentlyAskedQuestions(
+                        rock: rock,
+                        stoneData: widget.stoneData,
+                        fromAI: fromAI),
+                    OtherInformationWidget(
+                        rock: rock,
+                        stoneData: widget.stoneData,
+                        fromAI: fromAI),
                   ],
                 ),
               ),
@@ -173,120 +235,206 @@ class _StoneDetailScreenState extends State<StoneDetailScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: BottomNavBar(rock: widget.rock),
+      bottomNavigationBar: BottomNavBar(
+        rock: rock,
+        favoriteService: _favoriteService,
+        collectionService: _collectionService,
+      ),
     );
   }
 }
 
 class BottomNavBar extends StatelessWidget {
   final RockModel rock;
-  final FavoriteService _favoriteService = FavoriteService();
+  final FavoriteService favoriteService;
+  final CollectionService collectionService;
 
-  BottomNavBar({super.key, required this.rock});
+  const BottomNavBar({
+    Key? key,
+    required this.rock,
+    required this.favoriteService,
+    required this.collectionService,
+  }) : super(key: key);
 
   void _toggleFavorite(BuildContext context, bool currentStatus) {
-    _favoriteService.toggleFavorite(rock.id, !currentStatus);
+    favoriteService.toggleFavorite(rock.id, !currentStatus);
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder<bool>(
-      stream: _favoriteService.rockFavoriteStatusStream(rock.id),
-      builder: (context, snapshot) {
-        final isFavorite = snapshot.data ?? false;
+      stream: favoriteService.rockFavoriteStatusStream(rock.id),
+      builder: (context, favoriteSnapshot) {
+        final isFavorite = favoriteSnapshot.data ?? false;
+        final width = MediaQuery.of(context).size.width;
 
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 400),
-          curve: Curves.easeInOut,
-          margin: const EdgeInsets.fromLTRB(0, 0, 0, 24),
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: const BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.only(
-              topLeft: Radius.circular(16),
-              topRight: Radius.circular(16),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 10,
-                offset: Offset(0, -2),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                width: 45,
-                height: 45,
-                decoration: BoxDecoration(
-                  color: Colors.grey[400],
-                  borderRadius: BorderRadius.circular(8),
+        return StreamBuilder<bool>(
+          stream: collectionService.checkRockInUserCollection(rock.id),
+          builder: (context, collectionSnapshot) {
+            final isInCollection = collectionSnapshot.data ?? false;
+            print(
+                'Rendering BottomNavBar, isInCollection: $isInCollection'); // Debug log
+
+            return Container(
+              padding: const EdgeInsets.fromLTRB(16, 10, 16, 24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
                 ),
-                child: const Icon(
-                  Icons.camera_alt,
-                  color: Colors.black87,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 16),
-              GestureDetector(
-                onTap: () => _toggleFavorite(context, isFavorite),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.black, width: 2),
-                    borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, -3),
                   ),
-                  child: Center(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 300),
-                      child: Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        key: ValueKey<bool>(isFavorite),
-                        color: isFavorite ? Colors.red : Colors.black,
-                        size: 26,
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      // Camera Button
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () async {
+                            Navigator.push(
+                              context,
+                              PageRouteBuilder(
+                                pageBuilder:
+                                    (context, animation, secondaryAnimation) =>
+                                        ScannerScreen(),
+                                transitionsBuilder: (context, animation,
+                                    secondaryAnimation, child) {
+                                  const begin = Offset(0.0, 1.0);
+                                  const end = Offset.zero;
+                                  const curve = Curves.easeInOut;
+                                  var tween = Tween(begin: begin, end: end)
+                                      .chain(CurveTween(curve: curve));
+                                  var offsetAnimation = animation.drive(tween);
+                                  return SlideTransition(
+                                    position: offsetAnimation,
+                                    child: child,
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                          child:
+                              _buildIconButton(icon: Icons.camera_alt_outlined),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      // Favorite Button
+                      GestureDetector(
+                        onTap: () => _toggleFavorite(context, isFavorite),
+                        child: _buildIconButton(
+                          icon: isFavorite
+                              ? Icons.favorite
+                              : Icons.favorite_border,
+                          iconColor: isFavorite ? Colors.red : Colors.black,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // Button Thêm vào bộ sưu tập hoặc Đã có trong bộ sưu tập
+                  SizedBox(
+                    width: width * 0.55,
+                    height: 48,
+                    child: ElevatedButton(
+                      onPressed: isInCollection
+                          ? null // Vô hiệu hóa nếu đã có trong bộ sưu tập
+                          : () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      CollectionDetailScreen(rock: rock),
+                                ),
+                              );
+                            },
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        elevation: 0,
+                        backgroundColor: Colors.transparent,
+                      ),
+                      child: Ink(
+                        decoration: BoxDecoration(
+                          gradient: isInCollection
+                              ? null // Không gradient nếu đã có
+                              : const LinearGradient(
+                                  colors: [
+                                    Color(0xFFFFB547),
+                                    Color(0xFFF37736)
+                                  ],
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                ),
+                          color: isInCollection
+                              ? Colors.grey[300] // Màu xám khi vô hiệu hóa
+                              : null,
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Container(
+                          alignment: Alignment.center,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                isInCollection ? Icons.check : Icons.add,
+                                color: isInCollection
+                                    ? Colors.grey[700]
+                                    : Colors.white,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                isInCollection
+                                    ? "Đã có trong bộ sưu tập"
+                                    : "Thêm vào bộ sưu tập",
+                                style: TextStyle(
+                                  color: isInCollection
+                                      ? Colors.grey[700]
+                                      : Colors.white,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ),
-              const Spacer(),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => CollectionDetailScreen(rock: rock),
-                    ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE6792B),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-                  minimumSize: const Size(200, 50),
-                  elevation: 0,
-                ),
-                child: const Text(
-                  "+Thêm vào bộ sưu tập",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
+    );
+  }
+
+  Widget _buildIconButton({
+    required IconData icon,
+    Color iconColor = Colors.black,
+  }) {
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.black, width: 1.2),
+        borderRadius: BorderRadius.circular(12),
+        color: Colors.white,
+      ),
+      child: Icon(icon, color: iconColor, size: 22),
     );
   }
 }
