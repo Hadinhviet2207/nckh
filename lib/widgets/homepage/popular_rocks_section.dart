@@ -24,20 +24,27 @@ class _PopularRocksSectionState extends State<PopularRocksSection> {
       return RockModel.fromJson(doc.data());
     }).toList();
 
-    // Lọc theo loaiDa duy nhất
-    final seenLoaiDa = <String>{};
-    final filtered = <RockModel>[];
-
+    // Nhóm đá theo loaiDa và đếm số lượng
+    final rockCountByLoaiDa = <String, List<RockModel>>{};
     for (var rock in allRocks) {
       final loai = rock.loaiDa.trim();
-      if (!seenLoaiDa.contains(loai)) {
-        seenLoaiDa.add(loai);
-        filtered.add(rock);
+      if (!rockCountByLoaiDa.containsKey(loai)) {
+        rockCountByLoaiDa[loai] = [];
       }
+      rockCountByLoaiDa[loai]!.add(rock);
     }
 
+    // Lọc các loaiDa có số lượng tên đá >= 2 và chọn một đại diện
+    final filteredRocks = <RockModel>[];
+    rockCountByLoaiDa.forEach((loaiDa, rocks) {
+      if (rocks.length >= 2) {
+        // Ngưỡng: ít nhất 2 tên đá
+        filteredRocks.add(rocks.first); // Chọn đá đầu tiên làm đại diện
+      }
+    });
+
     setState(() {
-      uniqueRocks = filtered;
+      uniqueRocks = filteredRocks;
     });
   }
 
@@ -67,7 +74,7 @@ class _PopularRocksSectionState extends State<PopularRocksSection> {
                     final name = rock.loaiDa;
                     final imageUrl = (rock.hinhAnh.isNotEmpty)
                         ? rock.hinhAnh[0]
-                        : 'Không có ảnh';
+                        : 'https://via.placeholder.com/85'; // Ảnh mặc định nếu không có
 
                     return RockCard(
                       name: name,
@@ -89,34 +96,43 @@ class RockCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          width: 85,
-          height: 85,
-          margin: EdgeInsets.symmetric(horizontal: 8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            image: DecorationImage(
-              image: NetworkImage(imagePath),
-              fit: BoxFit.cover,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 4,
-                spreadRadius: 1,
-                offset: Offset(0, 2),
+    return Container(
+      width: 100, // Giới hạn chiều rộng của RockCard
+      margin: EdgeInsets.symmetric(horizontal: 8),
+      child: Column(
+        children: [
+          Container(
+            width: 85,
+            height: 85,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              image: DecorationImage(
+                image: NetworkImage(imagePath),
+                fit: BoxFit.cover,
+                onError: (exception, stackTrace) => AssetImage(
+                    'assets/placeholder.png'), // Ảnh thay thế nếu lỗi
               ),
-            ],
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 4,
+                  spreadRadius: 1,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
           ),
-        ),
-        SizedBox(height: 4),
-        Text(
-          name,
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
-        ),
-      ],
+          SizedBox(height: 4),
+          Text(
+            name,
+            style: TextStyle(
+                fontSize: 14, fontWeight: FontWeight.bold), // Giảm fontSize
+            maxLines: 1, // Giới hạn 1 dòng
+            overflow: TextOverflow.ellipsis, // Thêm dấu "..." nếu văn bản dài
+            textAlign: TextAlign.center, // Căn giữa văn bản
+          ),
+        ],
+      ),
     );
   }
 }

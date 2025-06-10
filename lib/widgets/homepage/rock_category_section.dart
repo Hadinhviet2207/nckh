@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:stonelens/services/favorite_service.dart';
 import 'package:stonelens/views/home/StoneDetailScreen.dart';
-import 'package:stonelens/models/rock_model.dart'; // Đường dẫn này tùy thuộc vị trí file RockModel
+import 'package:stonelens/models/rock_model.dart';
 
 class RockCategorySection extends StatefulWidget {
   @override
@@ -30,15 +30,32 @@ class _RockCategorySectionState extends State<RockCategorySection> {
       return RockModel.fromJson(data);
     }).toList();
 
-    final types = rocks
-        .map((rock) => rock.nhomDa)
-        .toSet()
-        .where((type) => type.isNotEmpty)
+    // Nhóm đá theo nhomDa và đếm số lượng
+    final rockCountByNhomDa = <String, List<RockModel>>{};
+    for (var rock in rocks) {
+      final nhom = rock.nhomDa.trim();
+      if (nhom.isNotEmpty) {
+        if (!rockCountByNhomDa.containsKey(nhom)) {
+          rockCountByNhomDa[nhom] = [];
+        }
+        rockCountByNhomDa[nhom]!.add(rock);
+      }
+    }
+
+    // Lọc các nhomDa có số lượng đá >= 4
+    final filteredNhomDa = rockCountByNhomDa.entries
+        .where((entry) => entry.value.length >= 4)
+        .map((entry) => entry.key)
+        .toList();
+
+    // Lọc danh sách đá chỉ chứa các đá thuộc nhomDa được chọn
+    final filteredRocks = rocks
+        .where((rock) => filteredNhomDa.contains(rock.nhomDa.trim()))
         .toList();
 
     setState(() {
-      allRocks = rocks;
-      categories = ['Tất cả', ...types];
+      allRocks = filteredRocks;
+      categories = ['Tất cả', ...filteredNhomDa];
     });
   }
 

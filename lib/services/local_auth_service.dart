@@ -5,7 +5,7 @@ class LocalAuthService {
   static const String _keyIsFirstTime = 'is_first_time';
   static const String _keyIsLoggedIn = 'is_logged_in';
 
-  static bool _useLocalStorage = false;
+  static bool _useLocalStorage = true;
 
   static void disableLocalStorageForTest() {
     _useLocalStorage = false;

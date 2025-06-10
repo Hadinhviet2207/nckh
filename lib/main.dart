@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:stonelens/camera_screen.dart';
-import 'package:stonelens/image_search_camera_screen.dart';
 import 'package:stonelens/viewmodels/forgot_password_viewmodel.dart';
 import 'package:stonelens/viewmodels/login_viewmodel.dart';
 import 'package:stonelens/viewmodels/register_viewmodel.dart';
@@ -30,7 +29,7 @@ class RockApp extends StatelessWidget {
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         theme: ThemeData(fontFamily: 'Roboto'),
-        home: ImageSearchCameraScreen(),
+        home: Intro_HomeScreen(),
       ),
     );
   }

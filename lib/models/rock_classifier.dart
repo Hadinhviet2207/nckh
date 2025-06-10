@@ -7,17 +7,26 @@ class RockClassifier {
   /// Load mô hình từ assets
   Future<void> loadModel() async {
     try {
-      _interpreter = await Interpreter.fromAsset('assets/model/test3.tflite');
+      _interpreter = await Interpreter.fromAsset('assets/model/test5.tflite');
       print("✅ Model loaded");
     } catch (e) {
       print("❌ Failed to load model: $e");
     }
   }
 
-  /// Dự đoán ảnh đã resize
   Future<Map<String, dynamic>> predict(img.Image image) async {
+    // Kiểm tra ảnh đầu vào
+    if (image == null) {
+      throw Exception("Ảnh đầu vào không hợp lệ");
+    }
+
     // Resize ảnh về 224x224
     final resizedImage = img.copyResize(image, width: 224, height: 224);
+
+    // Kiểm tra kích thước ảnh
+    if (resizedImage.width != 224 || resizedImage.height != 224) {
+      throw Exception("Ảnh không được resize đúng kích thước 224x224");
+    }
 
     // Chuyển ảnh thành tensor 4D [1, 224, 224, 3]
     var input = List.generate(
@@ -26,10 +35,11 @@ class RockClassifier {
             224,
             (x) => List.generate(224, (y) {
                   final pixel = resizedImage.getPixel(x, y);
-                  final r = pixel.r / 255.0;
-                  final g = pixel.g / 255.0;
-                  final b = pixel.b / 255.0;
-                  return [r, g, b];
+                  // Ép kiểu an toàn
+                  final r = (pixel.r as num?)?.toDouble() ?? 0.0;
+                  final g = (pixel.g as num?)?.toDouble() ?? 0.0;
+                  final b = (pixel.b as num?)?.toDouble() ?? 0.0;
+                  return [r / 255.0, g / 255.0, b / 255.0];
                 })));
 
     // Tạo mảng output
@@ -55,37 +65,28 @@ class RockClassifier {
     var top1 = indexedPredictions[0];
     var top2 = indexedPredictions.length > 1 ? indexedPredictions[1] : null;
 
-    // Ngưỡng để xác định "gần bằng nhau" (ví dụ: chênh lệch < 10%)
-    const double threshold = 0.1;
-
-    List<Map<String, dynamic>> topLabels;
-
     // In phần trăm của top1
     print(
         "Top 1 (index ${top1.key}): ${(top1.value * 100).toStringAsFixed(2)}%");
 
-    if (top2 != null) {
-      // In phần trăm của top2
-      print(
-          "Top 2 (index ${top2.key}): ${(top2.value * 100).toStringAsFixed(2)}%");
+    dynamic result;
 
-      if ((top1.value - top2.value) < threshold) {
-        // Nếu nhãn cao nhất và nhãn thứ hai gần nhau, trả về cả hai
-        topLabels = [
-          {"index": top1.key, "confidence": top1.value},
-          {"index": top2.key, "confidence": top2.value},
-        ];
-      } else {
-        // Nếu nhãn cao nhất vượt trội, chỉ trả về nhãn cao nhất
-        topLabels = [
-          {"index": top1.key, "confidence": top1.value},
-        ];
-      }
+    // Ngưỡng xác suất 90%
+    const double confidenceThreshold = 0.8;
+
+    if (top1.value > confidenceThreshold) {
+      // Nếu top1 > 90%, trả về index của top1
+      result = top1.key;
     } else {
-      // Nếu không có top2, chỉ trả về top1
-      topLabels = [
-        {"index": top1.key, "confidence": top1.value},
-      ];
+      // Nếu top1 <= 90%, trả về [top1, top2] nếu top2 tồn tại
+      if (top2 != null) {
+        print(
+            "Top 2 (index ${top2.key}): ${(top2.value * 100).toStringAsFixed(2)}%");
+        result = [top1.key, top2.key];
+      } else {
+        // Nếu không có top2, trả về [top1]
+        result = [top1.key];
+      }
     }
 
     // Giải phóng bộ nhớ mô hình
@@ -93,7 +94,7 @@ class RockClassifier {
     print("✅ Model resources released successfully.");
 
     return {
-      "topLabels": topLabels,
+      "result": result, // Trả về int hoặc List<int>
       "raw": predictions,
     };
   }

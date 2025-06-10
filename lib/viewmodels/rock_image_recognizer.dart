@@ -6,6 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:stonelens/image_search_camera_screen.dart';
 import 'package:stonelens/models/rock_classifier.dart';
 import 'package:stonelens/views/home/StoneDetailScreen.dart';
 import 'package:stonelens/widgets/homepage/custom_dialog.dart';
@@ -48,20 +49,44 @@ class RockImageRecognizer {
       await classifier.loadModel();
 
       final result = await classifier.predict(image);
-      int predictedIndex = result['predictedIndex'];
-      double confidence = result['confidence'];
+      dynamic predictedResult = result['result'];
+      List<double> rawPredictions = result['raw'];
+
+      // Tìm xác suất cao nhất từ raw predictions
+      double confidence = rawPredictions.reduce((a, b) => a > b ? a : b);
+      int predictedIndex;
+      List<int>? topIndices;
+
+      // Xử lý kết quả dự đoán
+      if (predictedResult is int) {
+        predictedIndex = predictedResult;
+      } else if (predictedResult is List<int>) {
+        predictedIndex = predictedResult[0];
+        topIndices = predictedResult;
+      } else {
+        showRockAlertDialog(
+          context,
+          'Lỗi dự đoán',
+          'Kết quả dự đoán không hợp lệ.',
+        );
+        return;
+      }
+
       print(
           "🎯 Kết quả dự đoán: $predictedIndex | Độ chính xác: ${(confidence * 100).toStringAsFixed(2)}%");
+      if (topIndices != null) {
+        print("Top indices: $topIndices");
+      }
 
       // Danh sách ID đá trong Firestore, index tương ứng với predictedIndex
       final List<String> rockIds = [
-        'I9L193idhSdBqeMPghOU',
-        'DviEhCtAbdse1mO5ELO3',
-        'Sgh169zpRAvDNpSlrELt',
-        'M3lz86JyDr6fDW9ZND44',
+        'vwG9hJwT7I0kiSH9v7nW',
+        'L9bPxbJCIq4NOtjequWo',
+        'zyryUoCx3nsJsCfKz1gC',
+        'ZcyYBBeW52k1OgEJFVc6',
       ];
 
-      // Nếu predictedIndex không hợp lệ hoặc không có trong danh sách
+      // Kiểm tra index hợp lệ
       if (predictedIndex < 0 || predictedIndex >= rockIds.length) {
         showRockAlertDialog(
           context,
@@ -71,74 +96,78 @@ class RockImageRecognizer {
         return;
       }
 
-      if (confidence < 0.50) {
-        showRockAlertDialog(
-          context,
-          'Không nhận diện được',
-          'Ảnh không rõ ràng. Vui lòng thử lại.',
-        );
-        return;
-      }
-
-      final String predictedRockId = rockIds[predictedIndex];
-      final snapshot = await FirebaseFirestore.instance
-          .collection('_rocks')
-          .doc(predictedRockId)
-          .get();
-
-      if (!snapshot.exists) {
-        showRockAlertDialog(
-          context,
-          'Không tìm thấy dữ liệu',
-          'Không có dữ liệu cho loại đá đã nhận diện.',
-        );
-        return;
-      }
-
-      final Map<String, dynamic> data = snapshot.data()!;
-      // Thêm id document vào map data để sau này dùng cho yêu thích
-      final Map<String, dynamic> dataWithId = Map<String, dynamic>.from(data);
-      dataWithId['id'] = snapshot.id;
-
-      // Thời gian hiện tại
-      final now = DateTime.now().toUtc().add(const Duration(hours: 7));
-      final formattedTime =
-          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} - "
-          "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
-
-      final user = FirebaseAuth.instance.currentUser;
-      if (user != null) {
-        final historyRef = FirebaseFirestore.instance
-            .collection('users')
-            .doc(user.uid)
-            .collection('history_rocks');
-
-        final existingQuery = await historyRef
-            .where('tenDa', isEqualTo: data['tenDa'])
-            .limit(1)
+      // Nếu top1 > 90%, điều hướng đến StoneDetailScreen
+      if (predictedResult is int) {
+        final String predictedRockId = rockIds[predictedIndex];
+        final snapshot = await FirebaseFirestore.instance
+            .collection('_rocks')
+            .doc(predictedRockId)
             .get();
 
-        if (existingQuery.docs.isEmpty) {
-          await historyRef.add({
-            'rock_id': predictedRockId,
-            'tenDa': data['tenDa'],
-            'time': formattedTime,
-            'predictedAt': FieldValue.serverTimestamp(),
-          });
-        } else {
-          print("⚠️ Đá này đã có trong lịch sử, không thêm lại.");
+        if (!snapshot.exists) {
+          showRockAlertDialog(
+            context,
+            'Không tìm thấy dữ liệu',
+            'Không có dữ liệu cho loại đá đã nhận diện.',
+          );
+          return;
         }
-      }
 
-      // Điều hướng đến màn hình chi tiết đá, truyền dữ liệu đã có id
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => StoneDetailScreen(
-            stoneData: jsonEncode(dataWithId), // encode map có id
+        final Map<String, dynamic> data = snapshot.data()!;
+        final Map<String, dynamic> dataWithId = Map<String, dynamic>.from(data);
+        dataWithId['id'] = snapshot.id;
+
+        // Lưu lịch sử
+        final now = DateTime.now().toUtc().add(const Duration(hours: 7));
+        final formattedTime =
+            "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')} - "
+            "${now.day.toString().padLeft(2, '0')}/${now.month.toString().padLeft(2, '0')}/${now.year}";
+
+        final user = FirebaseAuth.instance.currentUser;
+        if (user != null) {
+          final historyRef = FirebaseFirestore.instance
+              .collection('users')
+              .doc(user.uid)
+              .collection('history_rocks');
+
+          final existingQuery = await historyRef
+              .where('tenDa', isEqualTo: data['tenDa'])
+              .limit(1)
+              .get();
+
+          if (existingQuery.docs.isEmpty) {
+            await historyRef.add({
+              'rock_id': predictedRockId,
+              'tenDa': data['tenDa'],
+              'time': formattedTime,
+              'predictedAt': FieldValue.serverTimestamp(),
+            });
+          } else {
+            print("⚠️ Đá này đã có trong lịch sử, không thêm lại.");
+          }
+        }
+
+        // Điều hướng đến StoneDetailScreen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => StoneDetailScreen(
+              stoneData: jsonEncode(dataWithId),
+            ),
           ),
-        ),
-      );
+        );
+      } else {
+        showModalBottomSheet(
+          context: context,
+          isScrollControlled: true, // Cho phép full screen nếu cần
+          backgroundColor: Colors
+              .transparent, // Nền trong suốt để thấy được phần thiết kế bên trong widget
+          builder: (context) => ImageSearchCameraScreen(
+            topIndices: topIndices!,
+            rockIds: rockIds,
+          ),
+        );
+      }
     } catch (e) {
       print("🔥 Lỗi xử lý ảnh hoặc nhận diện: $e");
       showRockAlertDialog(
